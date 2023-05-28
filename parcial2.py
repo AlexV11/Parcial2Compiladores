@@ -7,86 +7,77 @@ st.set_page_config(
 )
 
 st.title("Parcial 2")
-st.write("Integrantes:")
 st.write("338803 - Saul Fernando Rodríguez Gutiérrez")
-st.write("338817 - Eric Alejandro Aguilar Marcial")
+st.write("338803 - Eric Alejandro Aguilar Marcial")
 st.write("338931 - Andrés Alexis Villalba García")
 
-# Definición de las variables globales
-tokens = ['A', 'BC']
-t_A = r'a'
-t_BC = r'bc'
-t_ignore = ' \n'
-n = 0
-cuenta_a = 0
-count_expres = 0
+tokens = ['PARDER', 'PARIZQ', 'ABC']
 
-# Función para manejar errores léxicos
+t_PARIZQ = r'\('
+t_PARDER = r'\)'
+t_ABC = r'abc'
+t_ignore = '\n'
+
+contar_der = 0
+contar_izq = 1
+
 def t_error(t):
     t.lexer.skip(1)
-    st.error(f"La cadena no pertenece al lenguaje.")
+    print(f"Carácter inesperado: {t.value[0]}")
     exit()
+   
 
 # Crear el analizador léxico
 lexer = lex.lex()
 
 # Reglas de la gramática para el analizador sintáctico
-def p_expresion(p):
+def p_expression(p):
     '''
-    expresion : a_expresion BC expresion 
-               | 
+    expression : p_left_expression ABC p_right_expression
     '''
-    global count_expres
-    count_expres += 1
 
-def p_a_expresion(p):
+def p_par_izq_expression(p):
     '''
-    a_expresion : A
-                 | a_expresion A
+    p_left_expression : PARIZQ
+                 | p_left_expression PARIZQ
     '''
-    global n, cuenta_a
-    if cuenta_a == 0:
-        n = len(p)+1
-    cuenta_a += 1
+    # Contamos el numero de parentecis izquierdos
+    global contar_izq
+    contar_izq += 1
+
+def p_par_der_expression(p):
+    '''
+    p_right_expression : PARDER p_right_expression
+                 | 
+    '''
+    # Contamos el numero de parentecis derechos
+    global contar_der
+    contar_der += 1
 
 # Función para manejar errores sintácticos
 def p_error(p):
     if p:
-        print(f"Error de sintaxis en el token: {p.type}")
+        st.error(f"Error de sintaxis en el token")
     else:
-        print("Error de sintaxis en la entrada")
+        st.error("Error de sintaxis en la entrada")
 
 # Crear el analizador sintáctico
 parser = yacc.yacc()
 
 # Función para ejecutar el reconocedor de cadenas
-def reconocer(cadena):
-    global cuenta_a, count_expres
-    cuenta_a, count_expres = 0, 0
-    parser.parse(cadena)
-    if cuenta_a == ((count_expres - 1) * count_expres):
-        print("La cadena es válida.")
-    else:
-        print("La cadena no pertenece al lenguaje.")
-
-# haz una función que cuente cuantas b y c hay en la cadena
-def contar_b_c(cadena):
-    cuenta_b, cuenta_c = 0, 0
-    for i in cadena:
-        if i == "b":
-            cuenta_b += 1
-        elif i == "c":
-            cuenta_c += 1
-    return cuenta_b, cuenta_c
-
-
-st.text_input("Ingresa una cadena: ", key="cadena")
-if st.button("Reconocer"):
-    cadena = st.session_state.cadena
-    b_cant, c_cant = contar_b_c(cadena)
-    reconocer(cadena)
-    print(f"b: {b_cant}, c: {c_cant}, count_expres: {count_expres}")
-    if cuenta_a != ((count_expres - 1) * count_expres):
-        st.error("La cadena no pertenece al lenguaje.")
-    else:
+def analizar(cadena):
+    # Definición de variables globales
+    global contar_izq, contar_der
+    # Inicializamos las variables globales en 0's
+    contar_izq, contar_der = 1,0
+    parser.parse(cadena, lexer=lexer)
+    # Condicional para verificar si la cadena es válida o no
+    if contar_izq > 1 and  contar_izq - (contar_der) == 1:
         st.success("La cadena es válida.")
+    else:
+        st.error("La cadena no pertenece al lenguaje.")
+
+
+entrada = st.text_input("Ingresa la cadena a analizar")
+if st.button("Analizar"):
+    analizar(entrada)
