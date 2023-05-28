@@ -24,7 +24,7 @@ count_expres = 0
 # Función para manejar errores léxicos
 def t_error(t):
     t.lexer.skip(1)
-    st.error(f"Carácter inesperado: {t.value[0]}, la cadena no pertenece al lenguaje.")
+    st.error(f"La cadena no pertenece al lenguaje.")
     exit()
 
 # Crear el analizador léxico
